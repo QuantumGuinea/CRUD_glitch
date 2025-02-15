@@ -18,7 +18,7 @@ app.use(
     allowedHeaders: "Content-Type, Authorization",
   })
 );
-app.use(express.static("docs"));
+app.use(express.static("public"));
 app.use(express.json({ limit: "10mb" })); // 🚀 JSON 요청 크기 제한 증가
 app.use(express.urlencoded({ limit: "10mb", extended: true })); // 🚀 URL-encoded 데이터 크기 제한 증가
 
@@ -38,7 +38,7 @@ app.get("/config", (req, res) => {
 
 // ✅ **index.html을 기본 페이지로 서빙**
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "docs", "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // 📌 소셜 로그인 요청을 처리하는 엔드포인트 추가 (GitHub, Google 지원)

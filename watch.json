@@ -1,6 +1,6 @@
 {
   "restart": {
-    "ignore": ["docs/*", ".env"]
+    "ignore": ["public/*", ".env"]
   },
   "throttle": 1000
 }
