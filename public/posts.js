@@ -106,8 +106,8 @@ function createPostElement(post) {
         <p class="post-text">${post.content}</p>
         ${dateText}
         <div class="post-actions">
-            <button class="edit-btn" onclick="enableEditMode('${post.id}')">✏ 수정</button>
-            <button class="delete-btn" onclick="deletePost('${post.id}')">🗑 삭제</button>
+            <button class="edit-btn">✏ 수정</button>
+            <button class="delete-btn">🗑 삭제</button>
         </div>
     </div>
     <div id="edit-mode-${post.id}" class="edit-post" style="display: none;">
@@ -116,16 +116,29 @@ function createPostElement(post) {
         ${imageTag}
         <input type="file" id="edit-image-${post.id}" class="file-upload">
         <div class="post-actions">
-            <button class="save-btn" onclick="updatePost('${post.id}')">💾 저장</button>
-            <button class="cancel-btn" onclick="disableEditMode('${post.id}')">❌ 취소</button>
+            <button class="save-btn">💾 저장</button>
+            <button class="cancel-btn">❌ 취소</button>
         </div>
     </div>
-    <div class="comments-section">
-        <input type="text" id="comment-input-${post.id}" class="comment-input" placeholder="댓글을 입력하세요">
-        <button class="comment-btn" onclick="addComment('${post.id}')">💬 댓글 작성</button>
-        <div class="comments" id="comments-${post.id}"></div>
-    </div>
   `;
+  
+  postDiv.querySelector(".edit-btn").addEventListener("click", () => enableEditMode(post.id));
+  postDiv.querySelector(".delete-btn").addEventListener("click", () => deletePost(post.id));
+  postDiv.querySelector(".save-btn").addEventListener("click", () => updatePost(post.id));
+  postDiv.querySelector(".cancel-btn").addEventListener("click", () => disableEditMode(post.id));
+  
   document.getElementById("postList").appendChild(postDiv);
   loadComments(post.id);
+}
+
+// 📌 수정 모드 활성화
+function enableEditMode(postId, title, content) {
+  document.getElementById(`view-mode-${postId}`).style.display = "none";
+  document.getElementById(`edit-mode-${postId}`).style.display = "block";
+}
+
+// 📌 수정 모드 취소
+function disableEditMode(postId) {
+  document.getElementById(`view-mode-${postId}`).style.display = "block";
+  document.getElementById(`edit-mode-${postId}`).style.display = "none";
 }

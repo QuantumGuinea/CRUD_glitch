@@ -20,16 +20,22 @@ export async function loadComments(board_id) {
           <p class="comment-content">${comment.content}</p>
           ${dateText}
           <div class="comment-actions">
-              <button class="edit-btn" onclick="enableCommentEditMode('${comment.id}', '${comment.content}')">✏ 수정</button>
-              <button class="delete-btn" onclick="deleteComment('${comment.id}', '${board_id}')">🗑 삭제</button>
+              <button class="edit-btn">✏ 수정</button>
+              <button class="delete-btn">🗑 삭제</button>
           </div>
       </div>
       <div id="edit-comment-mode-${comment.id}" style="display: none;">
           <input type="text" id="edit-comment-${comment.id}" class="comment-edit-input" value="${comment.content}">
-          <button class="save-btn" onclick="updateComment('${comment.id}', '${board_id}')">💾 저장</button>
-          <button class="cancel-btn" onclick="disableCommentEditMode('${comment.id}')">❌ 취소</button>
+          <button class="save-btn">💾 저장</button>
+          <button class="cancel-btn">❌ 취소</button>
       </div>
     `;
+    
+    commentElement.querySelector(".edit-btn").addEventListener("click", () => enableCommentEditMode(comment.id, comment.content));
+    commentElement.querySelector(".delete-btn").addEventListener("click", () => deleteComment(comment.id, board_id));
+    commentElement.querySelector(".save-btn").addEventListener("click", () => updateComment(comment.id, board_id));
+    commentElement.querySelector(".cancel-btn").addEventListener("click", () => disableCommentEditMode(comment.id));
+    
     commentsDiv.appendChild(commentElement);
   });
 }
@@ -54,23 +60,56 @@ export async function addComment(board_id) {
   }
 }
 
+// 📌 댓글 수정 모드 활성화
+export function enableCommentEditMode(commentId, content) {
+  document.getElementById(`view-comment-${commentId}`).style.display = "none";
+  document.getElementById(`edit-comment-mode-${commentId}`).style.display = "block";
+}
+
+// 📌 댓글 수정 모드 취소
+export function disableCommentEditMode(commentId) {
+  document.getElementById(`view-comment-${commentId}`).style.display = "block";
+  document.getElementById(`edit-comment-mode-${commentId}`).style.display = "none";
+}
+
+// 📌 댓글 수정
 export async function updateComment(commentId, board_id) {
   const user_id = await checkAuth();
   if (!user_id) return;
+
   const contentInput = document.getElementById(`edit-comment-${commentId}`);
   const newContent = contentInput.value.trim();
-  if (!newContent) return alert("댓글 내용을 입력하세요.");
-  await fetch(`${API_URL}/comments/${commentId}`, {
+  if (!newContent) {
+    alert("댓글 내용을 입력하세요.");
+    return;
+  }
+
+  const response = await fetch(`${API_URL}/comments/${commentId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ content: newContent }),
   });
-  loadComments(board_id);
+
+  if (response.ok) {
+    loadComments(board_id);
+  } else {
+    alert("댓글 수정 실패!");
+  }
 }
 
+// 📌 댓글 삭제
 export async function deleteComment(commentId, board_id) {
   const user_id = await checkAuth();
   if (!user_id) return;
-  await fetch(`${API_URL}/comments/${commentId}`, { method: "DELETE" });
-  loadComments(board_id);
+
+  const confirmDelete = confirm("정말로 삭제하시겠습니까?");
+  if (!confirmDelete) return;
+
+  const response = await fetch(`${API_URL}/comments/${commentId}`, { method: "DELETE" });
+
+  if (response.ok) {
+    loadComments(board_id);
+  } else {
+    alert("댓글 삭제 실패!");
+  }
 }
