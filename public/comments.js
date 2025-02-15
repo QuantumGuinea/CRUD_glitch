@@ -71,18 +71,6 @@ export async function addComment(board_id) {
   }
 }
 
-// 📌 댓글 수정 모드 활성화
-export function enableCommentEditMode(commentId, content) {
-  document.getElementById(`view-comment-${commentId}`).style.display = "none";
-  document.getElementById(`edit-comment-mode-${commentId}`).style.display = "block";
-}
-
-// 📌 댓글 수정 모드 취소
-export function disableCommentEditMode(commentId) {
-  document.getElementById(`view-comment-${commentId}`).style.display = "block";
-  document.getElementById(`edit-comment-mode-${commentId}`).style.display = "none";
-}
-
 // 📌 댓글 수정
 export async function updateComment(commentId, board_id) {
   const user_id = await checkAuth();
@@ -123,4 +111,18 @@ export async function deleteComment(commentId, board_id) {
   } else {
     alert("댓글 삭제 실패!");
   }
+}
+
+// 📌 댓글 수정 모드 활성화
+function enableCommentEditMode(commentId, content) {
+  document.getElementById(`view-comment-${commentId}`).style.display = "none";
+  document.getElementById(`edit-comment-mode-${commentId}`).style.display =
+    "block";
+}
+
+// 📌 댓글 수정 모드 취소
+function disableCommentEditMode(commentId) {
+  document.getElementById(`view-comment-${commentId}`).style.display = "block";
+  document.getElementById(`edit-comment-mode-${commentId}`).style.display =
+    "none";
 }

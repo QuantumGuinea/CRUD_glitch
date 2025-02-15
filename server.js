@@ -229,3 +229,15 @@ app.delete("/comments/:id", async (req, res) => {
 app.listen(port, () => {
   console.log(`✅ 서버가 실행됩니다: http://localhost:${port}`);
 });
+
+// 📌 수정 모드 활성화
+function enableEditMode(postId, title, content) {
+  document.getElementById(`view-mode-${postId}`).style.display = "none";
+  document.getElementById(`edit-mode-${postId}`).style.display = "block";
+}
+
+// 📌 수정 모드 취소
+function disableEditMode(postId) {
+  document.getElementById(`view-mode-${postId}`).style.display = "block";
+  document.getElementById(`edit-mode-${postId}`).style.display = "none";
+}

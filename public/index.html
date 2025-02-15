@@ -13,14 +13,14 @@
       <p>반려동물과 함께한 소중한 순간을 공유하세요!</p>
     </header>
 
+    <!-- 로그인 버튼 -->
     <div class="login-container">
       <button id="login-github" class="btn github">GitHub 로그인</button>
       <button id="login-google" class="btn google">Google 로그인</button>
-      <button id="logout" class="btn logout" style="display: none">
-        로그아웃
-      </button>
+      <button id="logout" class="btn logout" style="display: none">로그아웃</button>
     </div>
 
+    <!-- 게시글 작성 폼 -->
     <div class="post-form">
       <form id="postForm">
         <input
@@ -42,6 +42,38 @@
       </form>
     </div>
 
-    <div id="postList" class="post-container"></div>
+    <!-- ✅ 게시글 목록 컨테이너 (게시글 + 댓글 포함) -->
+    <div id="postList" class="post-container">
+      <!-- 게시글이 JavaScript를 통해 여기에 추가됨 -->
+    </div>
+
+    <!-- ✅ 게시글 템플릿 (JS에서 사용) -->
+    <template id="post-template">
+      <div class="post-card">
+        <div class="post-content">
+          <h3 class="post-title"></h3>
+          <p class="post-text"></p>
+          <div class="post-actions">
+            <button class="edit-btn">✏ 수정</button>
+            <button class="delete-btn">🗑 삭제</button>
+          </div>
+        </div>
+        <div class="edit-post" style="display: none;">
+          <input type="text" class="edit-title input-field" />
+          <textarea class="edit-content input-field" rows="4"></textarea>
+          <input type="file" class="edit-image file-upload" />
+          <div class="post-actions">
+            <button class="save-btn">💾 저장</button>
+            <button class="cancel-btn">❌ 취소</button>
+          </div>
+        </div>
+        <!-- ✅ 댓글 입력 & 목록 -->
+        <div class="comments-section">
+          <input type="text" class="comment-input input-field" placeholder="댓글을 입력하세요" />
+          <button class="comment-btn">💬 댓글 작성</button>
+          <div class="comments"></div> <!-- ✅ 댓글이 여기에 추가됨 -->
+        </div>
+      </div>
+    </template>
   </body>
 </html>

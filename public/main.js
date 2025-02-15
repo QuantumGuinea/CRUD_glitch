@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.querySelector("#login-google").addEventListener("click", () => signInWithProvider("google"));
   document.querySelector("#logout").addEventListener("click", () => signOutAndClearSession());
 
-  // ✅ 게시글 작성 이벤트 리스너
+  // ✅ 게시글 작성 이벤트 리스너 추가
   document.getElementById("postForm").addEventListener("submit", async function (event) {
     event.preventDefault();
     const title = document.getElementById("title").value;
@@ -26,10 +26,52 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
-// ✅ 댓글 버튼(`comment-btn`)을 클릭했을 때 `addComment(postId)` 호출
+// ✅ 게시글, 댓글 버튼 이벤트 위임 (게시글이 동적으로 추가되기 때문)
 document.addEventListener("click", (event) => {
+  const postDiv = event.target.closest(".post-card");
+  if (!postDiv) return;
+
+  const postId = postDiv.dataset.postId;
+
+  console.log(`🔹 클릭한 요소: ${event.target.classList}, postId: ${postId}`);
+
+  // 게시글 수정 버튼 클릭
+  if (event.target.classList.contains("edit-btn")) {
+    enableEditMode(postId);
+  }
+
+  // 게시글 삭제 버튼 클릭
+  if (event.target.classList.contains("delete-btn")) {
+    deletePost(postId);
+  }
+
+  // 게시글 저장 버튼 클릭
+  if (event.target.classList.contains("save-btn")) {
+    updatePost(postId);
+  }
+
+  // 수정 취소 버튼 클릭
+  if (event.target.classList.contains("cancel-btn")) {
+    disableEditMode(postId);
+  }
+
+  // 댓글 작성 버튼 클릭
   if (event.target.classList.contains("comment-btn")) {
-    const postId = event.target.previousElementSibling.id.replace("comment-input-", "");
-    addComment(postId);
+    const commentInput = postDiv.querySelector(".comment-input");
+    if (commentInput) {
+      addComment(postId);
+    }
   }
 });
+
+// 📌 수정 모드 활성화
+function enableEditMode(postId, title, content) {
+  document.getElementById(`view-mode-${postId}`).style.display = "none";
+  document.getElementById(`edit-mode-${postId}`).style.display = "block";
+}
+
+// 📌 수정 모드 취소
+function disableEditMode(postId) {
+  document.getElementById(`view-mode-${postId}`).style.display = "block";
+  document.getElementById(`edit-mode-${postId}`).style.display = "none";
+}

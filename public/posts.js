@@ -5,11 +5,28 @@ import { loadComments } from './comments.js';
 const API_URL =  "https://resilient-grass-equinox.glitch.me";
 
 export async function loadPosts() {
-  const response = await fetch(`${API_URL}/posts`);
-  const posts = await response.json();
-  const postList = document.getElementById("postList");
-  postList.innerHTML = "";
-  posts.forEach((post) => createPostElement(post));
+  console.log("🔹 loadPosts() 실행됨");
+
+  try {
+    const response = await fetch(`${API_URL}/posts`);
+    if (!response.ok) {
+      throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
+    }
+
+    const posts = await response.json();
+    console.log("✅ 받아온 게시글:", posts);
+
+    const postList = document.getElementById("postList");
+    if (!postList) {
+      console.error("🛑 오류: postList 요소를 찾을 수 없음!");
+      return;
+    }
+
+    postList.innerHTML = ""; // 기존 내용 지우기
+    posts.forEach((post) => createPostElement(post));
+  } catch (error) {
+    console.error("🛑 loadPosts() 오류:", error);
+  }
 }
 
 export async function savePost(title, content, imageFile) {
@@ -92,85 +109,36 @@ export async function convertToBase64(file) {
 }
 
 function createPostElement(post) {
-  const postDiv = document.createElement("div");
-  postDiv.classList.add("post-card");
-  const createdDate = new Date(post.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
-  const updatedDate = post.updated_at ? new Date(post.updated_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : null;
-  const isUpdated = post.updated_at && post.updated_at !== post.created_at;
-  let dateText = isUpdated ? `<div class="post-updated">✏ 수정됨: ${updatedDate}</div>` : `<div class="post-date">📅 작성일: ${createdDate}</div>`;
-  let imageTag = post.image_url ? `<div class="post-image"><img id="current-image-${post.id}" src="${post.image_url}" alt="게시물 이미지"></div>` : "";
-  postDiv.innerHTML = `
-    <div id="view-mode-${post.id}" class="post-content">
-        ${imageTag}
-        <h3 class="post-title">${post.title}</h3>
-        <p class="post-text">${post.content}</p>
-        ${dateText}
-        <div class="post-actions">
-            <button class="edit-btn">✏ 수정</button>
-            <button class="delete-btn">🗑 삭제</button>
-        </div>
-    </div>
-    <div id="edit-mode-${post.id}" class="edit-post" style="display: none;">
-        <input type="text" id="edit-title-${post.id}" class="input-field" value="${post.title}">
-        <textarea id="edit-content-${post.id}" class="input-field" rows="4">${post.content}</textarea>
-        ${imageTag}
-        <input type="file" id="edit-image-${post.id}" class="file-upload">
-        <div class="post-actions">
-            <button class="save-btn">💾 저장</button>
-            <button class="cancel-btn">❌ 취소</button>
-        </div>
-    </div>
-  `;
-  function createPostElement(post) {
-  const postDiv = document.createElement("div");
-  postDiv.classList.add("post-card");
-  const createdDate = new Date(post.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+  console.log(`📌 createPostElement() 실행됨: postId=${post.id}`);
 
-  let imageTag = post.image_url ? `<div class="post-image"><img id="current-image-${post.id}" src="${post.image_url}" alt="게시물 이미지"></div>` : "";
-  
+  const postDiv = document.createElement("div");
+  postDiv.classList.add("post-card");
+  postDiv.dataset.postId = post.id;
+
+  let imageTag = post.image_url
+    ? `<div class="post-image"><img src="${post.image_url}" alt="게시물 이미지"></div>`
+    : "";
+
   postDiv.innerHTML = `
-    <div id="view-mode-${post.id}" class="post-content">
+    <div class="post-content">
         ${imageTag}
         <h3 class="post-title">${post.title}</h3>
         <p class="post-text">${post.content}</p>
         <div class="post-actions">
             <button class="edit-btn">✏ 수정</button>
             <button class="delete-btn">🗑 삭제</button>
-        </div>
-    </div>
-    <div id="edit-mode-${post.id}" class="edit-post" style="display: none;">
-        <input type="text" id="edit-title-${post.id}" class="input-field" value="${post.title}">
-        <textarea id="edit-content-${post.id}" class="input-field" rows="4">${post.content}</textarea>
-        <input type="file" id="edit-image-${post.id}" class="file-upload">
-        <div class="post-actions">
-            <button class="save-btn">💾 저장</button>
-            <button class="cancel-btn">❌ 취소</button>
         </div>
     </div>
     <div class="comments-section">
-        <input type="text" id="comment-input-${post.id}" class="comment-input" placeholder="댓글을 입력하세요">
+        <input type="text" class="comment-input" placeholder="댓글을 입력하세요">
         <button class="comment-btn">💬 댓글 작성</button>
-        <div class="comments" id="comments-${post.id}"></div> <!-- ✅ 댓글 표시 영역 추가 -->
+        <div class="comments" id="comments-${post.id}"></div>
     </div>
   `;
 
-  postDiv.querySelector(".edit-btn").addEventListener("click", () => enableEditMode(post.id));
-  postDiv.querySelector(".delete-btn").addEventListener("click", () => deletePost(post.id));
-  postDiv.querySelector(".save-btn").addEventListener("click", () => updatePost(post.id));
-  postDiv.querySelector(".cancel-btn").addEventListener("click", () => disableEditMode(post.id));
-  
   document.getElementById("postList").appendChild(postDiv);
   loadComments(post.id);
 }
 
-// 📌 수정 모드 활성화
-function enableEditMode(postId, title, content) {
-  document.getElementById(`view-mode-${postId}`).style.display = "none";
-  document.getElementById(`edit-mode-${postId}`).style.display = "block";
-}
 
-// 📌 수정 모드 취소
-function disableEditMode(postId) {
-  document.getElementById(`view-mode-${postId}`).style.display = "block";
-  document.getElementById(`edit-mode-${postId}`).style.display = "none";
-}
+
