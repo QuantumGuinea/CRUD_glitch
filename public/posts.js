@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient.js';
 import { checkAuth } from './auth.js';
 import { loadComments } from './comments.js';
 
-const API_URL = "http://127.0.0.1:3000";
+const API_URL = "https://resilient-grass-equinox.glitch.me";
 
 export async function loadPosts() {
   const response = await fetch(`${API_URL}/posts`);

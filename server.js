@@ -10,7 +10,12 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // ✅ CORS 설정 (Glitch 허용)
-app.use(cors({ origin: "*", credentials: true }));
+
+app.use(cors({
+  origin: "*",  // 모든 요청을 허용
+  methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+  allowedHeaders: "Content-Type, Authorization"
+}));
 app.use(express.static("public"));
 app.use(express.json());
 
@@ -24,8 +29,7 @@ const supabase = createClient(
 app.get("/config", (req, res) => {
   res.json({
     SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-    API_URL: process.env.API_URL || "https://resilient-grass-equinox.glitch.me"
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY
   });
 });
 
