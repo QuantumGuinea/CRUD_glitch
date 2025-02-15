@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
-// ✅ 모든 클릭 이벤트를 하나의 리스너에서 처리
+// ✅ 모든 클릭 이벤트를 하나의 리스너에서 처리 (이벤트 위임 방식)
 document.addEventListener("click", (event) => {
   const postDiv = event.target.closest(".post-card");
   const commentBox = event.target.closest(".comment-box");
@@ -36,7 +36,8 @@ document.addEventListener("click", (event) => {
       enableEditMode(postId);
     }
 
-    if (event.target.classList.contains("delete-btn")) {
+    if (event.target.classList.contains("delete-btn") && !event.target.dataset.commentId) {
+      event.stopPropagation(); // 🚨 댓글 삭제 이벤트가 게시글 삭제로 전달되는 것을 방지
       deletePost(postId);
     }
 
@@ -49,6 +50,7 @@ document.addEventListener("click", (event) => {
     }
 
     if (event.target.classList.contains("comment-btn")) {
+      event.stopPropagation(); // 🚨 댓글 이벤트가 다른 요소로 전달되지 않도록 방지
       const commentInput = document.getElementById(`comment-input-${postId}`);
       if (!commentInput) {
         console.error(`🛑 오류: 댓글 입력란을 찾을 수 없음! comment-input-${postId}`);
@@ -67,8 +69,9 @@ document.addEventListener("click", (event) => {
       enableCommentEditMode(commentId);
     }
 
-    if (event.target.classList.contains("delete-btn")) {
-      deleteComment(commentId, postId);
+    if (event.target.classList.contains("delete-btn") && event.target.dataset.commentId) {
+      event.stopPropagation(); // 🚨 이벤트 버블링 방지
+      deleteComment(commentId, postId, event);
     }
 
     if (event.target.classList.contains("save-btn")) {

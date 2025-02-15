@@ -107,28 +107,34 @@ export async function convertToBase64(file) {
   });
 }
 
-// 📌 게시글 삭제
+// 📌 게시글 삭제 (확인 창 두 번 뜨는 문제 해결)
 export async function deletePost(postId) {
+  console.log(`🔹 deletePost 실행: postId=${postId}`);
+
   const user_id = await checkAuth();
   if (!user_id) return;
 
-  const confirmDelete = confirm("정말로 삭제하시겠습니까?");
-  if (!confirmDelete) return;
+  // ✅ 확인 창이 두 번 뜨는 문제 해결
+  if (!window.deleteConfirmFlag) {
+    const confirmDelete = confirm("정말로 게시글을 삭제하시겠습니까?");
+    if (!confirmDelete) return;
+    window.deleteConfirmFlag = true;
+  }
 
   try {
-    const response = await fetch(`${API_URL}/posts/${postId}`, {
-      method: "DELETE",
-    });
+    const response = await fetch(`${API_URL}/posts/${postId}`, { method: "DELETE" });
 
     if (!response.ok) {
-      throw new Error(`삭제 실패! 상태 코드: ${response.status}`);
+      throw new Error(`게시글 삭제 실패! 상태 코드: ${response.status}`);
     }
 
     console.log(`✅ 게시글 삭제 완료: postId=${postId}`);
-    loadPosts(); // 삭제 후 게시글 목록 다시 불러오기
+    loadPosts(); // ✅ 삭제 후 전체 게시글 새로고침
   } catch (error) {
     console.error("🛑 게시글 삭제 실패:", error);
     alert(`게시글 삭제 실패! 오류: ${error.message}`);
+  } finally {
+    window.deleteConfirmFlag = false;
   }
 }
 

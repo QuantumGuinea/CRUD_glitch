@@ -51,8 +51,16 @@ export async function loadComments(board_id) {
   }
 }
 
-// 📌 댓글 삭제 (삭제 버튼을 두 번 눌러야 하는 문제 해결 + 게시물 삭제되지 않도록 수정)
-export async function deleteComment(commentId, board_id) {
+// 📌 댓글 삭제 (확인 창이 두 번 뜨는 문제 해결)
+// 📌 댓글 삭제 (게시물까지 삭제되는 문제 해결)
+export async function deleteComment(commentId, board_id, event) {
+  console.log(`🔹 deleteComment 실행: commentId=${commentId}, board_id=${board_id}`);
+
+  // ✅ 이벤트 버블링 방지 (게시글 삭제 이벤트까지 전달되지 않도록)
+  if (event) {
+    event.stopPropagation();
+  }
+
   const user_id = await checkAuth();
   if (!user_id) return;
 
@@ -70,13 +78,13 @@ export async function deleteComment(commentId, board_id) {
 
     console.log(`✅ 댓글 삭제 완료: commentId=${commentId}`);
 
-    // ✅ 1. 서버에서 삭제된 후, DOM에서도 즉시 삭제 (버튼 두 번 눌러야 하는 문제 해결)
+    // ✅ 1. 서버에서 삭제된 후, DOM에서도 즉시 삭제
     const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
     if (commentElement) {
       commentElement.remove();
     }
 
-    // ✅ 2. 전체 댓글 목록 새로고침 (보드 ID 유지)
+    // ✅ 2. 전체 댓글 목록 새로고침
     loadComments(board_id);
   } catch (error) {
     console.error("🛑 댓글 삭제 실패:", error);
