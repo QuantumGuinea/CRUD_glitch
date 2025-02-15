@@ -10,79 +10,97 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.querySelector("#login-google").addEventListener("click", () => signInWithProvider("google"));
   document.querySelector("#logout").addEventListener("click", () => signOutAndClearSession());
 
-  // ✅ 게시글 작성 이벤트 리스너 추가
   document.getElementById("postForm").addEventListener("submit", async function (event) {
     event.preventDefault();
     const title = document.getElementById("title").value;
     const content = document.getElementById("content").value;
     const imageFile = document.getElementById("image").files[0];
     if (!title || !content) return;
-    
     await savePost(title, content, imageFile);
-    
     document.getElementById("title").value = "";
     document.getElementById("content").value = "";
     document.getElementById("image").value = "";
   });
 });
 
-// ✅ 게시글, 댓글 버튼 이벤트 위임 (게시글이 동적으로 추가되기 때문)
+// ✅ 모든 클릭 이벤트를 하나의 리스너에서 처리
 document.addEventListener("click", (event) => {
   const postDiv = event.target.closest(".post-card");
-  if (!postDiv) return;
+  const commentBox = event.target.closest(".comment-box");
 
-  const postId = postDiv.dataset.postId;
+  // 📌 게시글 관련 버튼 처리
+  if (postDiv) {
+    const postId = postDiv.dataset.postId;
 
-  console.log(`🔹 클릭한 요소: ${event.target.classList}, postId: ${postId}`);
+    if (event.target.classList.contains("edit-btn")) {
+      enableEditMode(postId);
+    }
 
-  // 게시글 수정 버튼 클릭
-  if (event.target.classList.contains("edit-btn")) {
-    enableEditMode(postId);
-  }
+    if (event.target.classList.contains("delete-btn")) {
+      deletePost(postId);
+    }
 
-  // 게시글 삭제 버튼 클릭
-  if (event.target.classList.contains("delete-btn")) {
-    deletePost(postId);
-  }
+    if (event.target.classList.contains("save-btn")) {
+      updatePost(postId);
+    }
 
-  // 게시글 저장 버튼 클릭
-  if (event.target.classList.contains("save-btn")) {
-    updatePost(postId);
-  }
+    if (event.target.classList.contains("cancel-btn")) {
+      disableEditMode(postId);
+    }
 
-  // 수정 취소 버튼 클릭
-  if (event.target.classList.contains("cancel-btn")) {
-    disableEditMode(postId);
-  }
-
-  // 댓글 작성 버튼 클릭
-  if (event.target.classList.contains("comment-btn")) {
-    const commentInput = postDiv.querySelector(".comment-input");
-    if (commentInput) {
+    if (event.target.classList.contains("comment-btn")) {
+      const commentInput = document.getElementById(`comment-input-${postId}`);
+      if (!commentInput) {
+        console.error(`🛑 오류: 댓글 입력란을 찾을 수 없음! comment-input-${postId}`);
+        return;
+      }
       addComment(postId);
+    }
+  }
+
+  // 📌 댓글 관련 버튼 처리
+  if (commentBox) {
+    const commentId = commentBox.dataset.commentId;
+    const postId = commentBox.closest(".post-card").dataset.postId;
+
+    if (event.target.classList.contains("edit-btn")) {
+      enableCommentEditMode(commentId);
+    }
+
+    if (event.target.classList.contains("delete-btn")) {
+      deleteComment(commentId, postId);
+    }
+
+    if (event.target.classList.contains("save-btn")) {
+      updateComment(commentId, postId);
+    }
+
+    if (event.target.classList.contains("cancel-btn")) {
+      disableCommentEditMode(commentId);
     }
   }
 });
 
-// 📌 수정 모드 활성화
+// 📌 게시글 수정 모드 활성화
 function enableEditMode(postId) {
-  console.log(`🔹 enableEditMode 실행: postId=${postId}`);
-
-  const viewMode = document.getElementById(`view-mode-${postId}`);
-  const editMode = document.getElementById(`edit-mode-${postId}`);
-
-  if (!viewMode || !editMode) {
-    console.error(`🛑 오류: postId=${postId}에 해당하는 요소를 찾을 수 없음.`);
-    return;
-  }
-
-  viewMode.style.display = "none";
-  editMode.style.display = "block";
+  document.getElementById(`view-mode-${postId}`).style.display = "none";
+  document.getElementById(`edit-mode-${postId}`).style.display = "block";
 }
 
-
-// 📌 수정 모드 취소
+// 📌 게시글 수정 모드 취소
 function disableEditMode(postId) {
   document.getElementById(`view-mode-${postId}`).style.display = "block";
   document.getElementById(`edit-mode-${postId}`).style.display = "none";
+}
+
+// 📌 댓글 수정 모드 활성화
+function enableCommentEditMode(commentId) {
+  document.getElementById(`view-comment-${commentId}`).style.display = "none";
+  document.getElementById(`edit-comment-mode-${commentId}`).style.display = "block";
+}
+
+// 📌 댓글 수정 모드 취소
+function disableCommentEditMode(commentId) {
+  document.getElementById(`view-comment-${commentId}`).style.display = "block";
+  document.getElementById(`edit-comment-mode-${commentId}`).style.display = "none";
 }
