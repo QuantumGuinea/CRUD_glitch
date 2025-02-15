@@ -201,10 +201,10 @@ document.addEventListener("DOMContentLoaded", initializeApp);
 
 
 const postForm = document.getElementById("postForm");
+const postList = document.getElementById("postList");
 
 // 📌 서버에서 게시글 불러오기
 async function loadPosts() {
-  const postList = document.getElementById("postList");
   const response = await fetch(`${API_URL}/posts`);
   const posts = await response.json();
 
@@ -543,6 +543,25 @@ function disableCommentEditMode(commentId) {
   document.getElementById(`edit-comment-mode-${commentId}`).style.display =
     "none";
 }
+
+// ✅ CRUD 관련 함수
+window.loadPosts = loadPosts;
+window.savePost = savePost;
+window.convertToBase64 = convertToBase64;
+window.updatePost = updatePost;
+window.deletePost = deletePost;
+window.addComment = addComment;
+window.updateComment = updateComment;
+window.deleteComment = deleteComment;
+
+// ✅ UI 상태 변경 관련 함수
+window.enableEditMode = enableEditMode;
+window.disableEditMode = disableEditMode;
+window.enableCommentEditMode = enableCommentEditMode;
+window.disableCommentEditMode = disableCommentEditMode;
+
+// ✅ 로그인 체크 함수
+window.checkAuth = checkAuth;
 
 // 📌 페이지 로드 시 게시글 불러오기
 window.onload = loadPosts;
