@@ -1,5 +1,10 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
+const API_URL = "https://resilient-grass-equinox.glitch.me"; // 백엔드 서버 주소
+
+const postList = document.getElementById("postList");
+const postForm = document.getElementById("postForm");
+
 let supabase; // 전역 변수
 
 async function loadConfig() {
@@ -15,38 +20,61 @@ async function loadConfig() {
   }
 }
 
-// 📌 Supabase 로드 후 실행할 코드
+// ✅ Supabase 초기화 후 실행할 함수
 async function initializeApp() {
-  await loadConfig(); // ✅ 환경변수 로딩 후 실행
-  console.log("✅ Supabase 환경변수 로딩 완료");
+  await loadConfig(); // Supabase 설정 로딩 후 실행
+  console.log("🔥 Supabase 연결 확인:", supabase);
 
-  // Supabase 객체가 생성된 후에만 실행 가능
-  if (supabase) {
-    console.log("🔥 Supabase 연결 확인:", supabase);
-    // 예시: 로그인 상태 확인
-    checkLogin();
+  if (!supabase) {
+    console.error("🛑 Supabase가 초기화되지 않음.");
+    return;
   }
+
+  // ✅ 로그인 버튼 이벤트 리스너 추가 (DOMContentLoaded 이후 실행)
+  document
+    .querySelector("#login-github")
+    ?.addEventListener("click", () => signInWithProvider("github"));
+
+  document
+    .querySelector("#login-google")
+    ?.addEventListener("click", () => signInWithProvider("google"));
+
+  // ✅ 로그아웃 버튼 이벤트 리스너 추가
+  const logoutButton = document.querySelector("#logout");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", signOutAndClearSession);
+  } else {
+    console.error("🛑 로그아웃 버튼을 찾을 수 없음.");
+  }
+
+  // ✅ Supabase 로그인 상태 변경 감지 (초기화 이후 실행)
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log("🔹 인증 상태 변경:", event, session);
+    checkLogin(); // ✅ 로그인 상태 자동 업데이트
+  });
+
+  // ✅ 로그인 상태 확인
+  checkLogin();
 }
 
-initializeApp();
-
-const API_URL = "https://resilient-grass-equinox.glitch.me"; // 백엔드 서버 주소
-
-const postList = document.getElementById("postList");
-const postForm = document.getElementById("postForm");
-
-// 📌 소셜 로그인 함수 (GitHub, Google 지원)
+// 📌 로그인 처리 함수
 async function signInWithProvider(provider) {
   console.log(`🔹 기존 세션 초기화 중...`);
-  await supabase.auth.signOut(); // ✅ 기존 세션 삭제 후 로그인 진행
+  
+  if (!supabase) {
+    console.error("🛑 Supabase가 초기화되지 않음. 로그인 불가");
+    return;
+  }
 
-  const redirectUrl = `${window.location.origin}/index.html`; // ✅ 로그인 후 돌아올 경로
+  await supabase.auth.signOut();
+
+  const redirectUrl = `${window.location.origin}/index.html`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: provider,
     options: {
       redirectTo: redirectUrl,
-      prompt: "select_account", // ✅ 항상 계정 선택 창 띄우기
+      prompt: "select_account",
     },
   });
 
@@ -55,20 +83,38 @@ async function signInWithProvider(provider) {
   } else {
     console.log(`✅ ${provider} 로그인 요청 보냄:`, data);
   }
-  // ✅ 로그인 후 2초 뒤에 세션 강제 업데이트 (Supabase 세션 반영 속도 문제 해결)
-  setTimeout(async () => {
-    await supabase.auth.getSession();
-    checkLogin();
-  }, 2000);
 }
 
-// 📌 로그인 버튼 이벤트 추가 (각 버튼 클릭 시 provider 설정)
-document
-  .querySelector("#login-github")
-  .addEventListener("click", () => signInWithProvider("github"));
-document
-  .querySelector("#login-google")
-  .addEventListener("click", () => signInWithProvider("google"));
+// 📌 로그아웃 함수
+async function signOutAndClearSession() {
+  if (!supabase) {
+    console.error("🛑 Supabase가 초기화되지 않음. 로그아웃 불가");
+    return;
+  }
+
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("🛑 로그아웃 실패:", error.message);
+    } else {
+      console.log("✅ 로그아웃 성공");
+
+      // ✅ 로컬 스토리지 및 쿠키 초기화
+      localStorage.clear();
+      sessionStorage.clear();
+      document.cookie.split(";").forEach((cookie) => {
+        document.cookie = cookie
+          .replace(/^ +/, "")
+          .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
+      });
+
+      // ✅ 현재 화면 새로고침
+      window.location.reload();
+    }
+  } catch (error) {
+    console.error("🛑 로그아웃 중 오류 발생:", error);
+  }
+}
 
 // 📌 로그인 상태 확인
 async function checkLogin() {
@@ -108,42 +154,8 @@ async function checkLogin() {
   }
 }
 
-// 📌 로그인 상태 자동 감지
-supabase.auth.onAuthStateChange((event, session) => {
-  console.log("🔹 인증 상태 변경:", event, session);
-  checkLogin(); // ✅ 로그인 상태 자동 업데이트
-});
-
 // 📌 페이지 로드 시 로그인 상태 확인
 document.addEventListener("DOMContentLoaded", checkLogin);
-
-//📌 로그아웃
-async function signOutAndClearSession() {
-  const { error } = await supabase.auth.signOut();
-
-  if (error) {
-    console.error("🛑 로그아웃 실패:", error.message);
-  } else {
-    console.log("✅ 로그아웃 성공");
-
-    // ✅ Supabase 인증 정보 삭제
-    localStorage.clear();
-    sessionStorage.clear();
-    document.cookie.split(";").forEach((cookie) => {
-      document.cookie = cookie
-        .replace(/^ +/, "")
-        .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
-    });
-
-    // ✅ 현재 화면을 강제로 새로고침하여 로그인 상태 초기화
-    window.location.reload();
-  }
-}
-
-// 📌 로그아웃 버튼 이벤트 추가
-document
-  .querySelector("#logout")
-  .addEventListener("click", signOutAndClearSession);
 
 async function checkAuth() {
   const { data: sessionData, error } = await supabase.auth.getSession();
