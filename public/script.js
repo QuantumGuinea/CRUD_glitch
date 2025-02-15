@@ -19,45 +19,74 @@ async function loadConfig() {
 // ✅ Supabase 초기화 후 실행할 함수
 async function initializeApp() {
   await loadConfig(); // Supabase 설정 로딩 후 실행
-  console.log("🔥 Supabase 연결 확인:", supabase);
 
   if (!supabase) {
     console.error("🛑 Supabase가 초기화되지 않음.");
     return;
   }
+  console.log("🔥 Supabase 연결 확인:", supabase);
 
-  // ✅ 로그인 및 로그아웃 버튼 이벤트 리스너 추가
-  document.querySelector("#login-github")?.addEventListener("click", () => {
-    if (!supabase) {
-      console.error("🛑 Supabase가 아직 초기화되지 않음. 로그인 불가");
-      return;
-    }
-    signInWithProvider("github");
-  });
-
-  document.querySelector("#login-google")?.addEventListener("click", () => {
-    if (!supabase) {
-      console.error("🛑 Supabase가 아직 초기화되지 않음. 로그인 불가");
-      return;
-    }
-    signInWithProvider("google");
-  });
-
-  const logoutButton = document.querySelector("#logout");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", signOutAndClearSession);
-  } else {
-    console.error("🛑 로그아웃 버튼을 찾을 수 없음.");
-  }
-
-  // ✅ Supabase 로그인 상태 변경 감지 (초기화 이후 실행)
+  // ✅ Supabase 로그인 상태 변경 감지 (⚠ Supabase가 초기화된 후에 실행)
   supabase.auth.onAuthStateChange((event, session) => {
     console.log("🔹 인증 상태 변경:", event, session);
     checkLogin(); // ✅ 로그인 상태 자동 업데이트
   });
 
-  // ✅ 로그인 상태 확인
+  // ✅ 로그인 상태 확인 (초기화 이후 실행)
   checkLogin();
+
+  // ✅ 로그인 및 로그아웃 버튼 이벤트 리스너 추가
+  document.querySelector("#login-github")?.addEventListener("click", async () => {
+    if (!supabase) {
+      console.error("🛑 Supabase가 아직 초기화되지 않음. 로그인 불가");
+      return;
+    }
+    await signInWithProvider("github");
+  });
+
+  document.querySelector("#login-google")?.addEventListener("click", async () => {
+    if (!supabase) {
+      console.error("🛑 Supabase가 아직 초기화되지 않음. 로그인 불가");
+      return;
+    }
+    await signInWithProvider("google");
+  });
+
+  const logoutButton = document.querySelector("#logout");
+  if (logoutButton) {
+    logoutButton.addEventListener("click", async () => {
+      await signOutAndClearSession();
+    });
+  } else {
+    console.error("🛑 로그아웃 버튼을 찾을 수 없음.");
+  }
+
+  // ✅ 페이지 로드 시 게시글 불러오기
+  loadPosts();
+  
+    // ✅ CRUD 관련 함수
+  window.loadPosts = loadPosts;
+  window.savePost = savePost;
+  window.convertToBase64 = convertToBase64;
+  
+    // ✅ CRUD 관련 함수
+  window.updatePost = updatePost;
+  window.deletePost = deletePost;
+  window.addComment = addComment;
+  window.updateComment = updateComment;
+  window.deleteComment = deleteComment;
+
+  // ✅ UI 상태 변경 관련 함수
+  window.enableEditMode = enableEditMode;
+  window.disableEditMode = disableEditMode;
+  window.enableCommentEditMode = enableCommentEditMode;
+  window.disableCommentEditMode = disableCommentEditMode;
+
+  // ✅ 로그인 체크 함수 (백엔드 요청 전에 로그인 상태 확인)
+  window.checkAuth = checkAuth;
+
+  // ✅ 페이지 로드 시 게시글 불러오기
+  window.loadPosts = loadPosts;
 }
 
 // 📌 로그인 처리 함수
@@ -170,11 +199,12 @@ document.addEventListener("DOMContentLoaded", initializeApp);
 
 //////////////////////////////////////////////
 
-const postList = document.getElementById("postList");
+
 const postForm = document.getElementById("postForm");
 
 // 📌 서버에서 게시글 불러오기
 async function loadPosts() {
+  const postList = document.getElementById("postList");
   const response = await fetch(`${API_URL}/posts`);
   const posts = await response.json();
 
