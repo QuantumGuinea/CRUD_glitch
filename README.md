@@ -27,7 +27,6 @@ CRUD_glitch/
 │── server.js           # Glitch에서 실행되는 Node.js 서버
 │── package.json        # 프로젝트 설정 및 종속성 관리
 │── README.md           # 프로젝트 설명 (이 문서)
-```
 
 
 ## 🛠 주요 코드 설명
