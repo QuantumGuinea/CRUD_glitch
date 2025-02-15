@@ -17,7 +17,8 @@ app.use(cors({
   allowedHeaders: "Content-Type, Authorization"
 }));
 app.use(express.static("public"));
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // 🚀 JSON 요청 크기 제한 증가
+app.use(express.urlencoded({ limit: "10mb", extended: true })); // 🚀 URL-encoded 데이터 크기 제한 증가
 
 // ✅ 환경 변수에서 Supabase 설정 불러오기
 const supabase = createClient(
@@ -53,7 +54,7 @@ app.get("/auth/:provider", async (req, res) => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: provider,
     options: {
-      redirectTo: "http://127.0.0.1:5500/tmp/docs/index.html", // ✅ 로그인 후 돌아올 URL
+      redirectTo: "https://resilient-grass-equinox.glitch.me", // ✅ 로그인 후 돌아올 URL
     },
   });
 

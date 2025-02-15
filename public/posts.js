@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient.js';
 import { checkAuth } from './auth.js';
 import { loadComments } from './comments.js';
 
-const API_URL = "https://resilient-grass-equinox.glitch.me";
+const API_URL =  "https://resilient-grass-equinox.glitch.me";
 
 export async function loadPosts() {
   const response = await fetch(`${API_URL}/posts`);
@@ -121,7 +121,39 @@ function createPostElement(post) {
         </div>
     </div>
   `;
+  function createPostElement(post) {
+  const postDiv = document.createElement("div");
+  postDiv.classList.add("post-card");
+  const createdDate = new Date(post.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+
+  let imageTag = post.image_url ? `<div class="post-image"><img id="current-image-${post.id}" src="${post.image_url}" alt="게시물 이미지"></div>` : "";
   
+  postDiv.innerHTML = `
+    <div id="view-mode-${post.id}" class="post-content">
+        ${imageTag}
+        <h3 class="post-title">${post.title}</h3>
+        <p class="post-text">${post.content}</p>
+        <div class="post-actions">
+            <button class="edit-btn">✏ 수정</button>
+            <button class="delete-btn">🗑 삭제</button>
+        </div>
+    </div>
+    <div id="edit-mode-${post.id}" class="edit-post" style="display: none;">
+        <input type="text" id="edit-title-${post.id}" class="input-field" value="${post.title}">
+        <textarea id="edit-content-${post.id}" class="input-field" rows="4">${post.content}</textarea>
+        <input type="file" id="edit-image-${post.id}" class="file-upload">
+        <div class="post-actions">
+            <button class="save-btn">💾 저장</button>
+            <button class="cancel-btn">❌ 취소</button>
+        </div>
+    </div>
+    <div class="comments-section">
+        <input type="text" id="comment-input-${post.id}" class="comment-input" placeholder="댓글을 입력하세요">
+        <button class="comment-btn">💬 댓글 작성</button>
+        <div class="comments" id="comments-${post.id}"></div> <!-- ✅ 댓글 표시 영역 추가 -->
+    </div>
+  `;
+
   postDiv.querySelector(".edit-btn").addEventListener("click", () => enableEditMode(post.id));
   postDiv.querySelector(".delete-btn").addEventListener("click", () => deletePost(post.id));
   postDiv.querySelector(".save-btn").addEventListener("click", () => updatePost(post.id));
