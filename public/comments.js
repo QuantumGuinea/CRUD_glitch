@@ -3,101 +3,74 @@ import { checkAuth } from './auth.js';
 
 const API_URL = "https://resilient-grass-equinox.glitch.me";
 
-// 📌 댓글 불러오기
 export async function loadComments(board_id) {
   console.log(`🔹 loadComments 실행: board_id=${board_id}`);
 
-  try {
-    const response = await fetch(`${API_URL}/comments?board_id=${board_id}`);
-    if (!response.ok) {
-      throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
-    }
+  const response = await fetch(`${API_URL}/comments?board_id=${board_id}`);
+  const comments = await response.json();
 
-    const comments = await response.json();
-    console.log("✅ 받아온 댓글:", comments);
+  const commentsDiv = document.getElementById(`comments-${board_id}`);
+  if (!commentsDiv) {
+    console.error(`🛑 오류: comments-${board_id} 요소를 찾을 수 없음!`);
+    return;
+  }
 
-    const commentsDiv = document.getElementById(`comments-${board_id}`);
-    if (!commentsDiv) {
-      console.error(`🛑 오류: comments-${board_id} 요소를 찾을 수 없음!`);
-      return;
-    }
+  commentsDiv.innerHTML = "";
+  comments.forEach((comment) => {
+    const createdDate = new Date(comment.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+    const updatedDate = comment.updated_at ? new Date(comment.updated_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }) : null;
+    const isUpdated = comment.updated_at && comment.updated_at !== comment.created_at;
+    let dateText = isUpdated ? `<div class="comment-updated">✏ 수정: ${updatedDate}</div>` : `<div class="comment-date">📅 작성: ${createdDate}</div>`;
 
-    commentsDiv.innerHTML = ""; // 기존 댓글 지우기
+    const commentElement = document.createElement("div");
+    commentElement.classList.add("comment-box");
+    commentElement.setAttribute("data-comment-id", comment.id); // ✅ 특정 댓글을 식별할 수 있도록 추가
 
-    comments.forEach((comment) => {
-      const commentElement = document.createElement("div");
-      commentElement.classList.add("comment-box");
-      commentElement.dataset.commentId = comment.id; // ✅ 댓글 ID 추가
-      commentElement.innerHTML = `
-        <div id="view-comment-${comment.id}">
+    commentElement.innerHTML = `
+      <div class="view-comment">
           <p class="comment-content">${comment.content}</p>
+          ${dateText}
           <div class="comment-actions">
-            <button class="edit-btn" data-comment-id="${comment.id}" data-board-id="${board_id}">✏ 수정</button>
-            <button class="delete-btn" data-comment-id="${comment.id}" data-board-id="${board_id}">🗑 삭제</button>
+              <button class="edit-btn">✏ 수정</button>
+              <button class="delete-btn">🗑 삭제</button>
           </div>
-        </div>
-        <div id="edit-comment-mode-${comment.id}" style="display: none;">
-          <input type="text" id="edit-comment-${comment.id}" class="comment-edit-input" value="${comment.content}">
-          <button class="save-btn" data-comment-id="${comment.id}" data-board-id="${board_id}">💾 저장</button>
-          <button class="cancel-btn" data-comment-id="${comment.id}">❌ 취소</button>
-        </div>
-      `;
+      </div>
+      <div class="edit-comment-mode" style="display: none;">
+          <input type="text" class="comment-edit-input" value="${comment.content}">
+          <button class="save-btn">💾 저장</button>
+          <button class="cancel-btn">❌ 취소</button>
+      </div>
+    `;
 
-      commentsDiv.appendChild(commentElement);
+    // ✅ 이벤트 리스너 추가
+    commentElement.querySelector(".edit-btn").addEventListener("click", (event) => {
+      event.stopPropagation(); // ✅ 중복 실행 방지
+      enableCommentEditMode(comment.id);
     });
 
-  } catch (error) {
-    console.error("🛑 loadComments() 오류:", error);
-  }
-}
-
-// 📌 댓글 삭제 (확인 창이 두 번 뜨는 문제 해결)
-// 📌 댓글 삭제 (게시물까지 삭제되는 문제 해결)
-export async function deleteComment(commentId, board_id, event) {
-  console.log(`🔹 deleteComment 실행: commentId=${commentId}, board_id=${board_id}`);
-
-  // ✅ 이벤트 버블링 방지 (게시글 삭제 이벤트까지 전달되지 않도록)
-  if (event) {
-    event.stopPropagation();
-  }
-
-  const user_id = await checkAuth();
-  if (!user_id) return;
-
-  const confirmDelete = confirm("정말로 댓글을 삭제하시겠습니까?");
-  if (!confirmDelete) return;
-
-  try {
-    const response = await fetch(`${API_URL}/comments/${commentId}`, {
-      method: "DELETE",
+    commentElement.querySelector(".delete-btn").addEventListener("click", (event) => {
+      event.stopPropagation(); // ✅ 중복 실행 방지
+      deleteComment(comment.id, board_id);
     });
 
-    if (!response.ok) {
-      throw new Error(`댓글 삭제 실패! 상태 코드: ${response.status}`);
-    }
+    commentElement.querySelector(".save-btn").addEventListener("click", (event) => {
+      event.stopPropagation();
+      updateComment(comment.id, board_id);
+    });
 
-    console.log(`✅ 댓글 삭제 완료: commentId=${commentId}`);
+    commentElement.querySelector(".cancel-btn").addEventListener("click", (event) => {
+      event.stopPropagation();
+      disableCommentEditMode(comment.id);
+    });
 
-    // ✅ 1. 서버에서 삭제된 후, DOM에서도 즉시 삭제
-    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
-    if (commentElement) {
-      commentElement.remove();
-    }
-
-    // ✅ 2. 전체 댓글 목록 새로고침
-    loadComments(board_id);
-  } catch (error) {
-    console.error("🛑 댓글 삭제 실패:", error);
-    alert(`댓글 삭제 실패! 오류: ${error.message}`);
-  }
+    commentsDiv.appendChild(commentElement);
+  });
 }
 
 // 📌 댓글 추가
 export async function addComment(board_id) {
   const user_id = await checkAuth();
   if (!user_id) return;
-
-  console.log(`🔹 addComment 실행: board_id=${board_id}`);
 
   const commentInput = document.getElementById(`comment-input-${board_id}`);
   if (!commentInput) {
@@ -118,14 +91,11 @@ export async function addComment(board_id) {
       body: JSON.stringify({ board_id, content }),
     });
 
-    console.log("📌 API 응답 상태 코드:", response.status);
-    
     if (!response.ok) {
       throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
     }
 
-    const responseData = await response.json();
-    console.log("📌 API 응답 데이터:", responseData);
+    commentInput.value = ""; // 입력창 초기화
     loadComments(board_id);
   } catch (error) {
     console.error("🛑 댓글 작성 실패:", error);
@@ -138,45 +108,91 @@ export async function updateComment(commentId, board_id) {
   const user_id = await checkAuth();
   if (!user_id) return;
 
-  const contentInput = document.getElementById(`edit-comment-${commentId}`);
-  if (!contentInput) {
-    console.error(`🛑 오류: id="edit-comment-${commentId}" 요소를 찾을 수 없음.`);
+  const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+  if (!commentElement) {
+    console.error(`🛑 오류: 댓글 요소를 찾을 수 없음! commentId=${commentId}`);
     return;
   }
 
+  const contentInput = commentElement.querySelector(".comment-edit-input");
   const newContent = contentInput.value.trim();
   if (!newContent) {
     alert("댓글 내용을 입력하세요.");
     return;
   }
 
+  // 기존 이미지 유지 (만약 댓글이 이미지 업로드를 지원할 경우 추가)
+  let imageUrl = commentElement.querySelector(".comment-image")?.src || null;
+  const imageFile = commentElement.querySelector(".comment-image-upload")?.files[0];
+
+  if (imageFile) {
+    imageUrl = await convertToBase64(imageFile);
+  }
+
   try {
     const response = await fetch(`${API_URL}/comments/${commentId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content: newContent }),
+      body: JSON.stringify({ content: newContent, image_url: imageUrl }),
     });
 
-    if (!response.ok) {
-      throw new Error(`댓글 수정 실패! 상태 코드: ${response.status}`);
+    if (response.ok) {
+      loadComments(board_id);
+    } else {
+      alert("댓글 수정 실패!");
     }
-
-    console.log(`✅ 댓글 수정 완료: commentId=${commentId}`);
-    loadComments(board_id);
   } catch (error) {
     console.error("🛑 댓글 수정 실패:", error);
-    alert(`댓글 수정 실패! 오류: ${error.message}`);
+    alert("댓글 수정 실패!");
+  }
+}
+
+// 📌 댓글 삭제
+export async function deleteComment(commentId, board_id) {
+  const user_id = await checkAuth();
+  if (!user_id) return;
+
+  const confirmDelete = confirm("정말로 삭제하시겠습니까?");
+  if (!confirmDelete) return;
+
+  try {
+    const response = await fetch(`${API_URL}/comments/${commentId}`, { method: "DELETE" });
+
+    if (response.ok) {
+      loadComments(board_id);
+    } else {
+      alert("댓글 삭제 실패!");
+    }
+  } catch (error) {
+    console.error("🛑 댓글 삭제 실패:", error);
+    alert("댓글 삭제 실패!");
   }
 }
 
 // 📌 댓글 수정 모드 활성화
-export function enableCommentEditMode(commentId) {
-  document.getElementById(`view-comment-${commentId}`).style.display = "none";
-  document.getElementById(`edit-comment-mode-${commentId}`).style.display = "block";
+function enableCommentEditMode(commentId) {
+  console.log(`🔹 enableCommentEditMode 실행: commentId=${commentId}`);
+
+  const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+  if (!commentElement) {
+    console.error(`🛑 오류: 댓글 요소를 찾을 수 없음! commentId=${commentId}`);
+    return;
+  }
+
+  commentElement.querySelector(".view-comment").style.display = "none";
+  commentElement.querySelector(".edit-comment-mode").style.display = "block";
 }
 
 // 📌 댓글 수정 모드 취소
-export function disableCommentEditMode(commentId) {
-  document.getElementById(`view-comment-${commentId}`).style.display = "block";
-  document.getElementById(`edit-comment-mode-${commentId}`).style.display = "none";
+function disableCommentEditMode(commentId) {
+  console.log(`🔹 disableCommentEditMode 실행: commentId=${commentId}`);
+
+  const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+  if (!commentElement) {
+    console.error(`🛑 오류: 댓글 요소를 찾을 수 없음! commentId=${commentId}`);
+    return;
+  }
+
+  commentElement.querySelector(".view-comment").style.display = "block";
+  commentElement.querySelector(".edit-comment-mode").style.display = "none";
 }

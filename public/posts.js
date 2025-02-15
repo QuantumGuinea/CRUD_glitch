@@ -73,21 +73,29 @@ export async function updatePost(postId) {
   const title = document.getElementById(`edit-title-${postId}`).value;
   const content = document.getElementById(`edit-content-${postId}`).value;
   const imageFile = document.getElementById(`edit-image-${postId}`).files[0];
+
+  // 기존 이미지 유지 (기존 URL 가져오기)
   let imageUrl = document.getElementById(`current-image-${postId}`)?.src || null;
 
+  // 새로운 파일이 있으면 Base64 변환
   if (imageFile) {
     imageUrl = await convertToBase64(imageFile);
   }
 
-  const response = await fetch(`${API_URL}/posts/${postId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, content, image_url: imageUrl }),
-  });
+  try {
+    const response = await fetch(`${API_URL}/posts/${postId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content, image_url: imageUrl }),
+    });
 
-  if (response.ok) {
-    loadPosts();
-  } else {
+    if (response.ok) {
+      loadPosts(); // 수정 후 게시글 다시 불러오기
+    } else {
+      alert("게시글 수정 실패!");
+    }
+  } catch (error) {
+    console.error("🛑 게시글 수정 실패:", error);
     alert("게시글 수정 실패!");
   }
 }
@@ -142,10 +150,11 @@ export async function deletePost(postId) {
 function createPostElement(post) {
   const postDiv = document.createElement("div");
   postDiv.classList.add("post-card");
-  postDiv.dataset.postId = post.id; // ✅ data-post-id 속성 추가
+  postDiv.dataset.postId = post.id; // ✅ 게시글 ID 추가
 
+  // ✅ 기존 이미지 유지
   let imageTag = post.image_url
-    ? `<div class="post-image"><img src="${post.image_url}" alt="게시물 이미지"></div>`
+    ? `<div class="post-image"><img id="current-image-${post.id}" src="${post.image_url}" alt="게시물 이미지"></div>`
     : "";
 
   postDiv.innerHTML = `
@@ -161,28 +170,25 @@ function createPostElement(post) {
     <div id="edit-mode-${post.id}" class="edit-post" style="display: none;">
         <input type="text" id="edit-title-${post.id}" class="input-field" value="${post.title}">
         <textarea id="edit-content-${post.id}" class="input-field" rows="4">${post.content}</textarea>
+        <div class="post-image">${imageTag}</div>
         <input type="file" id="edit-image-${post.id}" class="file-upload">
         <div class="post-actions">
             <button class="save-btn">💾 저장</button>
             <button class="cancel-btn">❌ 취소</button>
         </div>
     </div>
-    <div class="comments-section">
-        <!-- ✅ 댓글 입력란 추가 -->
-        <input type="text" id="comment-input-${post.id}" class="comment-input" placeholder="댓글을 입력하세요">
-        <button class="comment-btn">💬 댓글 작성</button>
-        <div class="comments" id="comments-${post.id}"></div> <!-- ✅ 댓글이 표시될 영역 -->
-    </div>
   `;
 
+  // ✅ 이벤트 리스너 추가 (수정, 삭제, 저장, 취소 버튼)
   postDiv.querySelector(".edit-btn").addEventListener("click", () => enableEditMode(post.id));
   postDiv.querySelector(".delete-btn").addEventListener("click", () => deletePost(post.id));
   postDiv.querySelector(".save-btn").addEventListener("click", () => updatePost(post.id));
   postDiv.querySelector(".cancel-btn").addEventListener("click", () => disableEditMode(post.id));
-  
+
   document.getElementById("postList").appendChild(postDiv);
-  loadComments(post.id); // ✅ 댓글 불러오기
+  loadComments(post.id);
 }
+
 
 
 // 📌 수정 모드 활성화
