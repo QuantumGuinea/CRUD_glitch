@@ -1,10 +1,6 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
 const API_URL = "https://resilient-grass-equinox.glitch.me"; // 백엔드 서버 주소
-
-const postList = document.getElementById("postList");
-const postForm = document.getElementById("postForm");
-
 let supabase; // 전역 변수
 
 async function loadConfig() {
@@ -12,11 +8,11 @@ async function loadConfig() {
     const response = await fetch("/config");
     const config = await response.json();
 
-    // ✅ 전역 변수에 할당 (const 제거)
+    // ✅ Supabase 클라이언트 전역 변수에 저장
     supabase = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
-    console.log("✅ Supabase 클라이언트 생성 완료", supabase);
+    console.log("✅ Supabase 클라이언트 생성 완료:", supabase);
   } catch (error) {
-    console.error("🛑 Supabase 환경변수 로딩 실패", error);
+    console.error("🛑 Supabase 환경변수 로딩 실패:", error);
   }
 }
 
@@ -30,16 +26,23 @@ async function initializeApp() {
     return;
   }
 
-  // ✅ 로그인 버튼 이벤트 리스너 추가 (DOMContentLoaded 이후 실행)
-  document
-    .querySelector("#login-github")
-    ?.addEventListener("click", () => signInWithProvider("github"));
+  // ✅ 로그인 및 로그아웃 버튼 이벤트 리스너 추가
+  document.querySelector("#login-github")?.addEventListener("click", () => {
+    if (!supabase) {
+      console.error("🛑 Supabase가 아직 초기화되지 않음. 로그인 불가");
+      return;
+    }
+    signInWithProvider("github");
+  });
 
-  document
-    .querySelector("#login-google")
-    ?.addEventListener("click", () => signInWithProvider("google"));
+  document.querySelector("#login-google")?.addEventListener("click", () => {
+    if (!supabase) {
+      console.error("🛑 Supabase가 아직 초기화되지 않음. 로그인 불가");
+      return;
+    }
+    signInWithProvider("google");
+  });
 
-  // ✅ 로그아웃 버튼 이벤트 리스너 추가
   const logoutButton = document.querySelector("#logout");
   if (logoutButton) {
     logoutButton.addEventListener("click", signOutAndClearSession);
@@ -59,13 +62,16 @@ async function initializeApp() {
 
 // 📌 로그인 처리 함수
 async function signInWithProvider(provider) {
-  console.log(`🔹 기존 세션 초기화 중...`);
   
-  if (!supabase) {
-    console.error("🛑 Supabase가 초기화되지 않음. 로그인 불가");
-    return;
+  console.log(`🔹 ${provider} 로그인 시도...`);
+
+  // ✅ Supabase가 초기화되지 않았다면 1초 기다린 후 다시 실행
+  while (!supabase) {
+    console.warn("🛑 Supabase가 아직 초기화되지 않음. 1초 대기...");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
+  console.log(`🔹 기존 세션 초기화 중...`);
   await supabase.auth.signOut();
 
   const redirectUrl = `${window.location.origin}/index.html`;
@@ -116,8 +122,13 @@ async function signOutAndClearSession() {
   }
 }
 
-// 📌 로그인 상태 확인
+// 📌 로그인 상태 확인 함수
 async function checkLogin() {
+  if (!supabase) {
+    console.error("🛑 Supabase가 초기화되지 않음. 로그인 상태 확인 불가");
+    return;
+  }
+
   try {
     const { data: sessionData, error } = await supabase.auth.getSession();
     console.log("🔹 Supabase 세션 데이터:", sessionData);
@@ -128,9 +139,9 @@ async function checkLogin() {
 
     if (error || !sessionData?.session) {
       console.warn("🔹 세션 없음, 로그아웃 상태 유지");
-      loginGit.style.display = "inline";
-      loginGoogle.style.display = "inline";
-      logoutButton.style.display = "none";
+      if (loginGit) loginGit.style.display = "inline";
+      if (loginGoogle) loginGoogle.style.display = "inline";
+      if (logoutButton) logoutButton.style.display = "none";
       return;
     }
 
@@ -146,25 +157,21 @@ async function checkLogin() {
       return;
     }
 
-    loginGit.style.display = "none";
-    loginGoogle.style.display = "none";
-    logoutButton.style.display = "inline";
+    if (loginGit) loginGit.style.display = "none";
+    if (loginGoogle) loginGoogle.style.display = "none";
+    if (logoutButton) logoutButton.style.display = "inline";
   } catch (err) {
     console.error("🛑 checkLogin() 실행 중 오류 발생:", err);
   }
 }
 
-// 📌 페이지 로드 시 로그인 상태 확인
-document.addEventListener("DOMContentLoaded", checkLogin);
+// ✅ 앱 초기화 실행 (DOMContentLoaded 시점에서 실행)
+document.addEventListener("DOMContentLoaded", initializeApp);
 
-async function checkAuth() {
-  const { data: sessionData, error } = await supabase.auth.getSession();
-  if (error || !sessionData?.session) {
-    alert("로그인이 필요합니다!");
-    return null;
-  }
-  return sessionData.session.user.id;
-}
+//////////////////////////////////////////////
+
+const postList = document.getElementById("postList");
+const postForm = document.getElementById("postForm");
 
 // 📌 서버에서 게시글 불러오기
 async function loadPosts() {
@@ -469,6 +476,16 @@ async function loadComments(board_id) {
     `;
     commentsDiv.appendChild(commentElement);
   });
+}
+
+// 📌 로그인하지 않은 사용자는 특정 작업을 할 수 없도록 제한
+async function checkAuth() {
+  const { data: sessionData, error } = await supabase.auth.getSession();
+  if (error || !sessionData?.session) {
+    alert("로그인이 필요합니다!");
+    return null;
+  }
+  return sessionData.session.user.id;
 }
 
 // 📌 수정 모드 활성화
