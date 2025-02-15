@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
-const path = require("path")
+const path = require("path");
 
 dotenv.config();
 
@@ -30,7 +30,7 @@ app.get("/config", (req, res) => {
 
 // ✅ **index.html을 기본 페이지로 서빙**
 app.get("/", (req, res) => {
-  res.sendFile(path.join(process.cwd(), "public", "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // 📌 소셜 로그인 요청을 처리하는 엔드포인트 추가 (GitHub, Google 지원)
