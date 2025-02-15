@@ -11,12 +11,14 @@ const port = process.env.PORT || 3000;
 
 // ✅ CORS 설정 (Glitch 허용)
 
-app.use(cors({
-  origin: "*",  // 모든 요청을 허용
-  methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
-  allowedHeaders: "Content-Type, Authorization"
-}));
-app.use(express.static("public"));
+app.use(
+  cors({
+    origin: "*", // 모든 요청을 허용
+    methods: "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+    allowedHeaders: "Content-Type, Authorization",
+  })
+);
+app.use(express.static("docs"));
 app.use(express.json({ limit: "10mb" })); // 🚀 JSON 요청 크기 제한 증가
 app.use(express.urlencoded({ limit: "10mb", extended: true })); // 🚀 URL-encoded 데이터 크기 제한 증가
 
@@ -30,13 +32,13 @@ const supabase = createClient(
 app.get("/config", (req, res) => {
   res.json({
     SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
   });
 });
 
 // ✅ **index.html을 기본 페이지로 서빙**
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "docs", "index.html"));
 });
 
 // 📌 소셜 로그인 요청을 처리하는 엔드포인트 추가 (GitHub, Google 지원)
