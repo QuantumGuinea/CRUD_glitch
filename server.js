@@ -2,6 +2,7 @@ const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
+const path = require("path")
 
 dotenv.config();
 
@@ -10,7 +11,9 @@ const port = process.env.PORT || 3000;
 
 // ✅ CORS 설정 (Glitch 허용)
 app.use(cors({ origin: "*", credentials: true }));
+app.use(express.static("public"))
 app.use(express.json());
+app.use(express.static("public", { extensions: ["html", "js", "css"] }));
 
 // ✅ 환경 변수에서 Supabase 설정 불러오기
 const supabase = createClient(
@@ -22,8 +25,13 @@ const supabase = createClient(
 app.get("/config", (req, res) => {
   res.json({
     SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
   });
+});
+
+// ✅ **index.html을 기본 페이지로 서빙**
+app.get("/", (req, res) => {
+  res.sendFile(path.join(process.cwd(), "public", "index.html"));
 });
 
 // 📌 소셜 로그인 요청을 처리하는 엔드포인트 추가 (GitHub, Google 지원)

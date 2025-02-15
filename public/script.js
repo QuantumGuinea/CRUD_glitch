@@ -1,10 +1,15 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
+let supabase;
+
 async function loadConfig() {
   try {
     const response = await fetch("/config");
     const config = await response.json();
-    const supabase = window.supabase.createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
+    const supabase = window.supabase.createClient(
+      config.SUPABASE_URL,
+      config.SUPABASE_ANON_KEY
+    );
     console.log("✅ Supabase 클라이언트 생성 완료");
   } catch (error) {
     console.error("🛑 Supabase 환경변수 로딩 실패", error);
