@@ -18,6 +18,14 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
+// ✅ 클라이언트에서 환경 변수 가져오는 config 엔드포인트 추가
+app.get("/config", (req, res) => {
+  res.json({
+    SUPABASE_URL: process.env.SUPABASE_URL,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY
+  });
+});
+
 // 📌 소셜 로그인 요청을 처리하는 엔드포인트 추가 (GitHub, Google 지원)
 app.get("/auth/:provider", async (req, res) => {
   const provider = req.params.provider; // ✅ URL에서 provider 가져오기
