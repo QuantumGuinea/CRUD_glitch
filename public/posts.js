@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient.js';
 import { checkAuth } from './auth.js';
-import { loadComments } from './comments.js';
+import { addComment, loadComments } from './comments.js';
 
 const API_URL = "https://resilient-grass-equinox.glitch.me";
 
@@ -177,17 +177,30 @@ function createPostElement(post) {
             <button class="cancel-btn">❌ 취소</button>
         </div>
     </div>
+    <!-- ✅ 댓글 입력창 및 댓글 리스트 추가 -->
+    <div class="comments-section">
+        <input type="text" id="comment-input-${post.id}" class="comment-input" placeholder="댓글을 입력하세요">
+        <button class="comment-btn">💬 댓글 작성</button>
+        <div class="comments" id="comments-${post.id}"></div>
+    </div>
   `;
 
-  // ✅ 이벤트 리스너 추가 (수정, 삭제, 저장, 취소 버튼)
+  // ✅ 이벤트 리스너 추가 (게시글 관련 버튼)
   postDiv.querySelector(".edit-btn").addEventListener("click", () => enableEditMode(post.id));
   postDiv.querySelector(".delete-btn").addEventListener("click", () => deletePost(post.id));
   postDiv.querySelector(".save-btn").addEventListener("click", () => updatePost(post.id));
   postDiv.querySelector(".cancel-btn").addEventListener("click", () => disableEditMode(post.id));
 
+  // ✅ 댓글 작성 버튼 리스너 추가
+  postDiv.querySelector(".comment-btn").addEventListener("click", () => addComment(post.id));
+
+  // ✅ 게시글 목록에 추가
   document.getElementById("postList").appendChild(postDiv);
+
+  // ✅ 댓글 불러오기 실행 (댓글 창이 안 사라지도록 유지)
   loadComments(post.id);
 }
+
 
 
 
