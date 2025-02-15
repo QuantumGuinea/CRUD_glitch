@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>반려동물 커뮤니티 게시판</title>
+    <link rel="stylesheet" href="/public/style.css" />
+    <script defer src="/public/script.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>🐾 반려동물 여행과 커뮤니티 🐶🐱</h1>
+      <p>반려동물과 함께한 소중한 순간을 공유하세요!</p>
+    </header>
+
+    <div class="login-container">
+      <button id="login-github" class="btn github">GitHub 로그인</button>
+      <button id="login-google" class="btn google">Google 로그인</button>
+      <button id="logout" class="btn logout" style="display: none">로그아웃</button>
+    </div>
+
+    <div class="post-form">
+      <form id="postForm">
+        <input type="text" id="title" class="input-field" placeholder="제목을 입력하세요" required />
+        <textarea id="content" class="input-field" rows="6" placeholder="반려동물과의 여행 이야기나 추억을 공유해주세요" required></textarea>
+        <input type="file" id="image" class="file-upload" />
+        <button type="submit" class="btn submit">🐾 글 작성</button>
+      </form>
+    </div>
+
+    <div id="postList" class="post-container"></div>
+  </body>
+</html>

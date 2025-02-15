@@ -1,13 +1,9 @@
-require("dotenv").config();
+const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 
-// ✅ 환경 변수에서 Supabase 설정 불러오기
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -16,9 +12,11 @@ const port = process.env.PORT || 3000;
 app.use(cors({ origin: "*", credentials: true }));
 app.use(express.json());
 
-// ✅ 서버 정상 실행 확인 로그 추가
-console.log("✅ Supabase 연결 완료");
-console.log(`✅ 서버 실행 중: http://localhost:${port}`);
+// ✅ 환경 변수에서 Supabase 설정 불러오기
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 // 📌 소셜 로그인 요청을 처리하는 엔드포인트 추가 (GitHub, Google 지원)
 app.get("/auth/:provider", async (req, res) => {
