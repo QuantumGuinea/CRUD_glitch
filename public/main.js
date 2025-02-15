@@ -65,10 +65,21 @@ document.addEventListener("click", (event) => {
 });
 
 // 📌 수정 모드 활성화
-function enableEditMode(postId, title, content) {
-  document.getElementById(`view-mode-${postId}`).style.display = "none";
-  document.getElementById(`edit-mode-${postId}`).style.display = "block";
+function enableEditMode(postId) {
+  console.log(`🔹 enableEditMode 실행: postId=${postId}`);
+
+  const viewMode = document.getElementById(`view-mode-${postId}`);
+  const editMode = document.getElementById(`edit-mode-${postId}`);
+
+  if (!viewMode || !editMode) {
+    console.error(`🛑 오류: postId=${postId}에 해당하는 요소를 찾을 수 없음.`);
+    return;
+  }
+
+  viewMode.style.display = "none";
+  editMode.style.display = "block";
 }
+
 
 // 📌 수정 모드 취소
 function disableEditMode(postId) {

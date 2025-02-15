@@ -54,20 +54,40 @@ export async function loadComments(board_id) {
 export async function addComment(board_id) {
   const user_id = await checkAuth();
   if (!user_id) return;
+  
+  console.log(`🔹 addComment 실행: board_id=${board_id}`);
+
   const commentInput = document.getElementById(`comment-input-${board_id}`);
+  if (!commentInput) {
+    console.error(`🛑 오류: id="comment-input-${board_id}" 요소를 찾을 수 없음.`);
+    return;
+  }
+
   const content = commentInput.value.trim();
-  if (!content) return;
-  const response = await fetch(`${API_URL}/comments`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ board_id, content }),
-  });
-  const responseData = await response.json();
-  console.log("📌 API 응답:", responseData);
-  if (response.ok) {
+  if (!content) {
+    alert("댓글 내용을 입력하세요.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ board_id, content }),
+    });
+
+    console.log("📌 API 응답 상태 코드:", response.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP 오류! 상태 코드: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    console.log("📌 API 응답 데이터:", responseData);
     loadComments(board_id);
-  } else {
-    alert(`댓글 작성 실패! 오류: ${responseData.error}`);
+  } catch (error) {
+    console.error("🛑 댓글 작성 실패:", error);
+    alert(`댓글 작성 실패! 오류: ${error.message}`);
   }
 }
 
