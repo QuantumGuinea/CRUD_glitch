@@ -36,9 +36,11 @@ document.addEventListener("click", (event) => {
       enableEditMode(postId);
     }
 
-    if (event.target.classList.contains("delete-btn") && !event.target.dataset.commentId) {
+    if (event.target.classList.contains("delete-btn") && !commentBox) {
       event.stopPropagation(); // 🚨 댓글 삭제 이벤트가 게시글 삭제로 전달되는 것을 방지
+      console.log(`🗑 게시글 삭제 요청: postId=${postId}`);
       deletePost(postId);
+      return; // ✅ 삭제 요청 후 추가 실행 방지
     }
 
     if (event.target.classList.contains("save-btn")) {
@@ -60,7 +62,7 @@ document.addEventListener("click", (event) => {
     }
   }
 
-  // 📌 댓글 관련 버튼 처리
+  // 📌 댓글 관련 버튼 처리 (게시글 삭제와 구분!)
   if (commentBox) {
     const commentId = commentBox.dataset.commentId;
     const postId = commentBox.closest(".post-card").dataset.postId;
@@ -69,9 +71,11 @@ document.addEventListener("click", (event) => {
       enableCommentEditMode(commentId);
     }
 
-    if (event.target.classList.contains("delete-btn") && event.target.dataset.commentId) {
+    if (event.target.classList.contains("delete-btn")) {
       event.stopPropagation(); // 🚨 이벤트 버블링 방지
-      deleteComment(commentId, postId, event);
+      console.log(`🗑 댓글 삭제 요청: commentId=${commentId}, postId=${postId}`);
+      deleteComment(commentId, postId);
+      return; // ✅ 삭제 요청 후 추가 실행 방지
     }
 
     if (event.target.classList.contains("save-btn")) {
