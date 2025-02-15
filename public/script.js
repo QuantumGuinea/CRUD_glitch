@@ -1,22 +1,34 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-let supabase;
+let supabase; // 전역 변수
 
 async function loadConfig() {
   try {
     const response = await fetch("/config");
     const config = await response.json();
-    const supabase = window.supabase.createClient(
-      config.SUPABASE_URL,
-      config.SUPABASE_ANON_KEY
-    );
-    console.log("✅ Supabase 클라이언트 생성 완료");
+
+    // ✅ 전역 변수에 할당 (const 제거)
+    supabase = createClient(config.SUPABASE_URL, config.SUPABASE_ANON_KEY);
+    console.log("✅ Supabase 클라이언트 생성 완료", supabase);
   } catch (error) {
     console.error("🛑 Supabase 환경변수 로딩 실패", error);
   }
 }
 
-loadConfig();
+// 📌 Supabase 로드 후 실행할 코드
+async function initializeApp() {
+  await loadConfig(); // ✅ 환경변수 로딩 후 실행
+  console.log("✅ Supabase 환경변수 로딩 완료");
+
+  // Supabase 객체가 생성된 후에만 실행 가능
+  if (supabase) {
+    console.log("🔥 Supabase 연결 확인:", supabase);
+    // 예시: 로그인 상태 확인
+    checkLogin();
+  }
+}
+
+initializeApp();
 
 const API_URL = "https://resilient-grass-equinox.glitch.me"; // 백엔드 서버 주소
 

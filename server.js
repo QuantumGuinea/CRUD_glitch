@@ -11,9 +11,8 @@ const port = process.env.PORT || 3000;
 
 // ✅ CORS 설정 (Glitch 허용)
 app.use(cors({ origin: "*", credentials: true }));
-app.use(express.static("public"))
+app.use(express.static("public"));
 app.use(express.json());
-app.use(express.static("public", { extensions: ["html", "js", "css"] }));
 
 // ✅ 환경 변수에서 Supabase 설정 불러오기
 const supabase = createClient(
