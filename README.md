@@ -1,4 +1,3 @@
-```markdown
 # 🐾 CRUD Glitch 프로젝트 (반려동물 커뮤니티 게시판)
 
 이 프로젝트는 **Glitch에서 개발된 반려동물 커뮤니티 웹 애플리케이션**입니다.  
@@ -12,6 +11,7 @@ Supabase를 사용하여 **소셜 로그인(GitHub, Google)** 및 **CRUD(게시�
 
 ---
 
+```
 ## 📂 프로젝트 구조
 
 CRUD_glitch/
@@ -27,7 +27,7 @@ CRUD_glitch/
 │── server.js           # Glitch에서 실행되는 Node.js 서버
 │── package.json        # 프로젝트 설정 및 종속성 관리
 │── README.md           # 프로젝트 설명 (이 문서)
-
+```
 
 ## 🛠 주요 코드 설명
 
